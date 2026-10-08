@@ -1,0 +1,39 @@
+BARTENDER'S BIBLE v1.0 — FLUTTER PLATFORM SETUP
+
+This Phase 2 package contains the complete app source under mobile/lib,
+but not generated Android/iOS platform folders because Flutter SDK is not
+available in the build environment used to prepare this package.
+
+ON A MACHINE WITH FLUTTER:
+
+1. Open a terminal in the mobile folder.
+
+2. Generate Android and iOS platform folders:
+   flutter create . --platforms=android,ios
+
+3. Get packages:
+   flutter pub get
+
+4. Android: confirm android/app/src/main/AndroidManifest.xml contains:
+   <uses-permission android:name="android.permission.INTERNET" />
+   <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+   Inside <queries> add:
+   <intent>
+       <action android:name="android.speech.RecognitionService" />
+   </intent>
+
+5. iOS: add these keys to ios/Runner/Info.plist:
+   <key>NSMicrophoneUsageDescription</key>
+   <string>Voice search lets you search Bartender's Bible by speaking.</string>
+   <key>NSSpeechRecognitionUsageDescription</key>
+   <string>Speech recognition converts your drink search into text.</string>
+
+6. Run:
+   flutter analyze
+
+7. Android debug build:
+   flutter build apk --debug
+
+The API base URL is already set to:
+https://webolium.com/bartenders/api/v1
