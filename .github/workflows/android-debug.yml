@@ -17,13 +17,13 @@ jobs:
           channel: stable
           cache: true
 
-- name: Generate platform folders if needed
-  working-directory: mobile
-  run: |
-    if [ ! -d android ]; then
-      flutter create . --platforms=android
-    fi
-    rm -f test/widget_test.dart
+      - name: Generate platform folders if needed
+        working-directory: mobile
+        run: |
+          if [ ! -d android ]; then
+            flutter create . --platforms=android
+          fi
+          rm -f test/widget_test.dart
     
       - name: Add Android permissions
         working-directory: mobile
