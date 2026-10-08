@@ -1,0 +1,62 @@
+name: Build Bartenders Bible Android Debug
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate platform folders if needed
+        working-directory: mobile
+        run: |
+          if [ ! -d android ]; then
+            flutter create . --platforms=android
+          fi
+
+      - name: Add Android permissions
+        working-directory: mobile
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/src/main/AndroidManifest.xml")
+          s=p.read_text()
+          if 'android.permission.INTERNET' not in s:
+              s=s.replace('<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
+                          '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.INTERNET" />')
+          if 'android.permission.RECORD_AUDIO' not in s:
+              s=s.replace('<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
+                          '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />')
+          if '<queries>' not in s:
+              s=s.replace('</manifest>',
+                          '    <queries>\n        <intent>\n            <action android:name="android.speech.RecognitionService" />\n        </intent>\n    </queries>\n</manifest>')
+          p.write_text(s)
+          PY
+
+      - name: Get packages
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: mobile
+        run: flutter analyze
+
+      - name: Build debug APK
+        working-directory: mobile
+        run: flutter build apk --debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: bartenders-bible-debug-apk
+          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
