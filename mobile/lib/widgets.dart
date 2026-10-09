@@ -11,23 +11,40 @@ class BbHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 14),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 9),
       decoration: const BoxDecoration(
         color: BbColors.brown,
         border: Border(bottom: BorderSide(color: BbColors.gold, width: 2)),
       ),
       child: Column(
         children: <Widget>[
-          Text(
-            "Bartender's Bible",
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: BbColors.goldLight,
-                  fontFamily: 'cursive',
-                  fontStyle: FontStyle.italic,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: .4,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              SizedBox(
+                width: 46,
+                height: 46,
+                child: Image.asset(
+                  'assets/header_logo.png',
+                  fit: BoxFit.contain,
                 ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  "Bartender's Bible",
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: BbColors.goldLight,
+                        fontFamily: 'cursive',
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: .4,
+                      ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           const Text(

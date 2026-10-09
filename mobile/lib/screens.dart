@@ -538,7 +538,12 @@ class _RecipeBlock extends StatelessWidget {
       children: <Widget>[
         const Divider(height: 32),
         Text(
-          recipe['name'].toString(),
+          recipe['name']
+                  .toString()
+                  .toLowerCase()
+                  .contains("bartender's bible house")
+              ? 'House Recipe'
+              : recipe['name'].toString(),
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 8),
@@ -1105,7 +1110,7 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  Future<void> microphone() async {
+  Future<void> microphone({bool forSuggestions = false}) async {
     if (listening) {
       await speech.stop();
       if (mounted) setState(() => listening = false);
@@ -1147,7 +1152,11 @@ class _SearchScreenState extends State<SearchScreen> {
         query.text = result.recognizedWords;
         query.selection = TextSelection.collapsed(offset: query.text.length);
         if (result.finalResult) {
-          search(voice: result.recognizedWords);
+          if (forSuggestions) {
+            createSuggestion(voice: result.recognizedWords);
+          } else {
+            search(voice: result.recognizedWords);
+          }
         }
       },
     );
@@ -1176,6 +1185,28 @@ class _SearchScreenState extends State<SearchScreen> {
             .cast<Map<String, dynamic>>();
         detected = (data['detected_ingredients'] as List)
             .cast<Map<String, dynamic>>();
+
+        if (voice != null && voice.trim().isNotEmpty) {
+          final selected =
+              (data['selected'] as Map).cast<String, dynamic>();
+          final a = (selected['alcohol_ids'] as List)
+              .map((e) => e as int)
+              .toList();
+          final m = (selected['mixer_ids'] as List)
+              .map((e) => e as int)
+              .toList();
+
+          for (var i = 0; i < chosenAlcohols.length; i++) {
+            chosenAlcohols[i] = i < a.length ? a[i] : null;
+          }
+          for (var i = 0; i < chosenMixers.length; i++) {
+            chosenMixers[i] = i < m.length ? m[i] : null;
+          }
+
+          final spokenOccasion = (selected['occasion'] ?? '').toString();
+          chosenOccasion =
+              spokenOccasion.isEmpty ? null : spokenOccasion;
+        }
       });
     } catch (e) {
       if (mounted) setState(() => error = e.toString());
@@ -1215,7 +1246,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             const SizedBox(width: 8),
             IconButton.filled(
-              onPressed: microphone,
+              onPressed: () => microphone(),
               icon: Icon(listening ? Icons.mic : Icons.mic_none),
               tooltip: listening ? 'Stop Listening' : 'Voice Search',
             ),
@@ -1398,18 +1429,9 @@ class _SearchScreenState extends State<SearchScreen> {
         TextButton.icon(
           onPressed: busy
               ? null
-              : () async {
-                  if (query.text.trim().isEmpty) {
-                    setState(() {
-                      error =
-                          'Tap the microphone first, then say what you have.';
-                    });
-                    return;
-                  }
-                  await createSuggestion(voice: query.text.trim());
-                },
-          icon: const Icon(Icons.mic),
-          label: const Text('Use Voice Phrase for Suggestions'),
+              : () => microphone(forSuggestions: true),
+          icon: Icon(listening ? Icons.mic : Icons.mic_none),
+          label: const Text('Speak Ingredients for Suggestions'),
         ),
         if (suggestions.isNotEmpty) ...<Widget>[
           const SizedBox(height: 10),
