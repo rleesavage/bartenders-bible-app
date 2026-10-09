@@ -289,28 +289,43 @@ class _AuthFooter extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: BbColors.brown,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: const Column(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      child: const Row(
         children: <Widget>[
-          Text(
-            'Webolium',
-            style: TextStyle(
-              color: BbColors.parchment,
-              fontWeight: FontWeight.bold,
-              fontSize: 9,
+          Expanded(
+            child: Text(
+              'Webolium',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: TextStyle(
+                color: BbColors.parchment,
+                fontWeight: FontWeight.bold,
+                fontSize: 8.5,
+              ),
             ),
           ),
-          Text(
-            'Bartenders Bible v1.0',
-            style: TextStyle(
-              color: BbColors.parchment,
-              fontStyle: FontStyle.italic,
-              fontSize: 8,
+          Expanded(
+            child: Text(
+              'Bartenders Bible v1.0',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: TextStyle(
+                color: BbColors.parchment,
+                fontStyle: FontStyle.italic,
+                fontSize: 8,
+              ),
             ),
           ),
-          Text(
-            '© RL Savage 2026',
-            style: TextStyle(color: BbColors.parchment, fontSize: 8),
+          Expanded(
+            child: Text(
+              '© RL Savage 2026',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: TextStyle(
+                color: BbColors.parchment,
+                fontSize: 8,
+              ),
+            ),
           ),
         ],
       ),

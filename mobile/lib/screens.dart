@@ -1296,6 +1296,7 @@ class _SearchScreenState extends State<SearchScreen> {
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: DropdownButtonFormField<int>(
+              isExpanded: true,
               value: chosenAlcohols[i],
               decoration: InputDecoration(
                 labelText: i == 0
@@ -1310,7 +1311,11 @@ class _SearchScreenState extends State<SearchScreen> {
                 ...alcohols.map(
                   (item) => DropdownMenuItem<int>(
                     value: item['id'] as int,
-                    child: Text(item['name'].toString()),
+                    child: Text(
+                      item['name'].toString(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ],
@@ -1331,6 +1336,7 @@ class _SearchScreenState extends State<SearchScreen> {
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: DropdownButtonFormField<int>(
+              isExpanded: true,
               value: chosenMixers[i],
               decoration: InputDecoration(labelText: 'Mixer ${i + 1}'),
               items: <DropdownMenuItem<int>>[
@@ -1341,7 +1347,11 @@ class _SearchScreenState extends State<SearchScreen> {
                 ...mixers.map(
                   (item) => DropdownMenuItem<int>(
                     value: item['id'] as int,
-                    child: Text(item['name'].toString()),
+                    child: Text(
+                      item['name'].toString(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ],
@@ -1359,6 +1369,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           value: chosenOccasion,
           decoration: const InputDecoration(labelText: 'Occasion'),
           items: <DropdownMenuItem<String>>[
@@ -1369,7 +1380,11 @@ class _SearchScreenState extends State<SearchScreen> {
             ...occasions.map(
               (item) => DropdownMenuItem<String>(
                 value: item,
-                child: Text(item),
+                child: Text(
+                  item,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
           ],

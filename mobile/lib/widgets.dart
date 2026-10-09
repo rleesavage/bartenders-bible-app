@@ -31,7 +31,7 @@ class BbHeader extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           const Text(
-            'CLASSIC DRINKS · HISTORY · TECHNIQUE · STORIES · BAR NOTES',
+            'DRINKS · HISTORY · TECHNIQUE · STORIES · BAR NOTES',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: BbColors.parchmentDeep,
@@ -74,7 +74,7 @@ class BbFooter extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(8, 10, 8, 12),
+      padding: const EdgeInsets.fromLTRB(8, 7, 8, 7),
       decoration: const BoxDecoration(
         color: BbColors.brown,
         border: Border(top: BorderSide(color: BbColors.gold, width: 2)),
@@ -111,26 +111,45 @@ class BbFooter extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 9),
-          const Text(
-            'Webolium',
-            style: TextStyle(
-              color: BbColors.parchment,
-              fontWeight: FontWeight.bold,
-              fontSize: 9,
-            ),
-          ),
-          const Text(
-            'Bartenders Bible v1.0',
-            style: TextStyle(
-              color: BbColors.parchment,
-              fontStyle: FontStyle.italic,
-              fontSize: 8,
-            ),
-          ),
-          const Text(
-            '© RL Savage 2026',
-            style: TextStyle(color: BbColors.parchment, fontSize: 8),
+          const SizedBox(height: 5),
+          const Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  'Webolium',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: BbColors.parchment,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 8.5,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'Bartenders Bible v1.0',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: BbColors.parchment,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 8,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  '© RL Savage 2026',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: BbColors.parchment,
+                    fontSize: 8,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -154,7 +173,10 @@ class _FooterButton extends StatelessWidget {
     return TextButton(
       onPressed: onTap,
       style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
+        minimumSize: const Size(0, 30),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
         backgroundColor: dark ? const Color(0xff2c1d12) : BbColors.brown2,
         foregroundColor: BbColors.goldLight,
         side: const BorderSide(color: BbColors.gold),
