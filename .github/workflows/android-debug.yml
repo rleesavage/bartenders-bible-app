@@ -31,7 +31,6 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          # Stable package/application identity.
           old = "com.example.bartenders_bible"
           new = "com.webolium.bartendersbible"
 
@@ -47,25 +46,27 @@ jobs:
           manifest = Path("android/app/src/main/AndroidManifest.xml")
           s = manifest.read_text()
 
-          s = s.replace('android:label="bartenders_bible"',
-                        'android:label="Bartender\\'s Bible"')
+          s = s.replace(
+              'android:label="bartenders_bible"',
+              "android:label=\"Bartender's Bible\""
+          )
 
           if 'android.permission.INTERNET' not in s:
-              s=s.replace(
+              s = s.replace(
                   '<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
                   '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n'
                   '    <uses-permission android:name="android.permission.INTERNET" />'
               )
 
           if 'android.permission.RECORD_AUDIO' not in s:
-              s=s.replace(
+              s = s.replace(
                   '<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
                   '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n'
                   '    <uses-permission android:name="android.permission.RECORD_AUDIO" />'
               )
 
           if '<queries>' not in s:
-              s=s.replace(
+              s = s.replace(
                   '</manifest>',
                   '    <queries>\n'
                   '        <intent>\n'
