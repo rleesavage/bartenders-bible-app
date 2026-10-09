@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'api.dart';
 import 'theme.dart';
@@ -335,7 +336,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
               Text(drink['short_description'].toString()),
             ],
             for (final recipe in recipes)
-              _RecipeBlock(recipe: recipe),
+              _RecipeBlock(recipe: recipe, drinkName: drink['name'].toString()),
             if (food.isNotEmpty)
               _ExpandableListSection(
                 title: 'Food Pairings',
@@ -497,8 +498,34 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
 
 class _RecipeBlock extends StatelessWidget {
   final Map<String, dynamic> recipe;
+  final String drinkName;
 
-  const _RecipeBlock({required this.recipe});
+  const _RecipeBlock({
+    required this.recipe,
+    required this.drinkName,
+  });
+
+  String displayTitle() {
+    final raw = recipe['name'].toString().trim();
+    final lower = raw.toLowerCase();
+
+    // Normalize every house-recipe title that still contains a Bartender's
+    // Bible/Bartenders Bible branding variant.
+    final isBibleHouse =
+        lower.contains('bartender') && lower.contains('bible');
+
+    if (!isBibleHouse) return raw;
+
+    final qualifiers = <String>[];
+    if (lower.contains('primary')) qualifiers.add('Primary');
+    if (lower.contains('standard')) qualifiers.add('Standard');
+    if (lower.contains('service')) qualifiers.add('Service');
+
+    final suffix =
+        qualifiers.isEmpty ? '' : ' — ${qualifiers.join(' / ')}';
+
+    return '$drinkName — House Recipe$suffix';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -538,12 +565,7 @@ class _RecipeBlock extends StatelessWidget {
       children: <Widget>[
         const Divider(height: 32),
         Text(
-          recipe['name']
-                  .toString()
-                  .toLowerCase()
-                  .contains("bartender's bible house")
-              ? 'House Recipe'
-              : recipe['name'].toString(),
+          displayTitle(),
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 8),
@@ -1505,15 +1527,83 @@ class _SuggestionCard extends StatelessWidget {
   }
 }
 
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends StatefulWidget {
   final Api api;
 
   const AboutScreen({super.key, required this.api});
 
   @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
+  bool deleting = false;
+
+  Future<void> _openWebAbout() async {
+    final uri = Uri.parse('https://www.webolium.com/bartenders/about.html');
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the web page.')),
+      );
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete My Account?'),
+        content: const Text(
+          'This permanently deletes your Bartender’s Bible account, '
+          'your private My Notebook entries, and your active app login tokens. '
+          'This cannot be undone.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete Account'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => deleting = true);
+    try {
+      await widget.api.delete('delete-account.php', <String, dynamic>{
+        'confirm': 'DELETE',
+      });
+
+      if (!mounted) return;
+
+      // The user row and every API token are gone at this point. Returning to
+      // the app's authentication flow happens naturally when the next
+      // authenticated request fails or the user logs out of the shell.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Your account and private notebook have been deleted.'),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => deleting = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return JsonFuture(
-      future: api.get('about.php'),
+      future: widget.api.get('about.php'),
       builder: (data) {
         return ListView(
           padding: const EdgeInsets.all(20),
@@ -1529,6 +1619,57 @@ class AboutScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 15),
                 child: Text(paragraph.toString()),
               ),
+
+            const Divider(height: 30),
+            const SectionTitle('Privacy & Account Data'),
+            const Text(
+              'Your account stores your name, verified email address, password '
+              'hash, login/security information, and the private entries you '
+              'create in My Notebook. Passwords are not stored in readable form.',
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'My Notebook belongs to the logged-in user. Your private notebook '
+              'entries are not shared with other Bartender’s Bible users.',
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _openWebAbout,
+              icon: const Icon(Icons.privacy_tip_outlined),
+              label: const Text('Privacy / Account Information'),
+            ),
+
+            const Divider(height: 30),
+            const SectionTitle('Delete My Account'),
+            const Text(
+              'You can permanently delete your Bartender’s Bible account here. '
+              'Deleting the account also deletes your private My Notebook '
+              'entries and invalidates your app login tokens.',
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: deleting ? null : _deleteAccount,
+              icon: const Icon(Icons.delete_forever),
+              label: Text(deleting ? 'Deleting…' : 'Delete My Account'),
+            ),
+
+            const Divider(height: 30),
+            const SectionTitle('About This App'),
+            const Text(
+              'Webolium',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const Text(
+              'Bartenders Bible v1.0',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontStyle: FontStyle.italic),
+            ),
+            const Text(
+              '© RL Savage 2026',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
           ],
         );
       },
