@@ -1,4 +1,4 @@
-name: Build Bartenders Bible Android Debug
+name: Build Bartenders Bible Android
 
 on:
   workflow_dispatch:
@@ -17,47 +17,104 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Generate platform folders if needed
+      - name: Generate Android platform
         working-directory: mobile
         run: |
           if [ ! -d android ]; then
             flutter create . --platforms=android
           fi
           rm -f test/widget_test.dart
-    
-      - name: Add Android permissions
+
+      - name: Set Android identity and permissions
         working-directory: mobile
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("android/app/src/main/AndroidManifest.xml")
-          s=p.read_text()
+
+          # Stable package/application identity.
+          old = "com.example.bartenders_bible"
+          new = "com.webolium.bartendersbible"
+
+          for p in Path("android").rglob("*"):
+              if p.is_file() and p.suffix in {".kt", ".kts", ".java", ".xml"}:
+                  try:
+                      s = p.read_text()
+                  except UnicodeDecodeError:
+                      continue
+                  if old in s:
+                      p.write_text(s.replace(old, new))
+
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          s = manifest.read_text()
+
+          s = s.replace('android:label="bartenders_bible"',
+                        'android:label="Bartender\\'s Bible"')
+
           if 'android.permission.INTERNET' not in s:
-              s=s.replace('<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
-                          '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.INTERNET" />')
+              s=s.replace(
+                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
+                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n'
+                  '    <uses-permission android:name="android.permission.INTERNET" />'
+              )
+
           if 'android.permission.RECORD_AUDIO' not in s:
-              s=s.replace('<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
-                          '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />')
+              s=s.replace(
+                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
+                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n'
+                  '    <uses-permission android:name="android.permission.RECORD_AUDIO" />'
+              )
+
           if '<queries>' not in s:
-              s=s.replace('</manifest>',
-                          '    <queries>\n        <intent>\n            <action android:name="android.speech.RecognitionService" />\n        </intent>\n    </queries>\n</manifest>')
-          p.write_text(s)
+              s=s.replace(
+                  '</manifest>',
+                  '    <queries>\n'
+                  '        <intent>\n'
+                  '            <action android:name="android.speech.RecognitionService" />\n'
+                  '        </intent>\n'
+                  '    </queries>\n'
+                  '</manifest>'
+              )
+
+          manifest.write_text(s)
           PY
+
+      - name: Install persistent debug signing key
+        working-directory: mobile
+        run: |
+          mkdir -p "$HOME/.android"
+          cp signing/bartenders-bible-debug.keystore "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
 
       - name: Get packages
         working-directory: mobile
         run: flutter pub get
 
+      - name: Generate launcher icons
+        working-directory: mobile
+        run: dart run flutter_launcher_icons
+
       - name: Analyze
         working-directory: mobile
         run: flutter analyze --no-fatal-infos
 
-      - name: Build debug APK
+      - name: Build APK
         working-directory: mobile
         run: flutter build apk --debug
 
-      - name: Upload APK
+      - name: Build AAB
+        working-directory: mobile
+        run: flutter build appbundle --release
+
+      - name: Name Android outputs
+        run: |
+          mkdir -p artifacts
+          cp mobile/build/app/outputs/flutter-apk/app-debug.apk artifacts/Bartenders_Bible.apk
+          cp mobile/build/app/outputs/bundle/release/app-release.aab artifacts/Bartenders_Bible.aab
+
+      - name: Upload Android builds
         uses: actions/upload-artifact@v4
         with:
-          name: bartenders-bible-debug-apk
-          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
+          name: Bartenders_Bible_Android
+          path: |
+            artifacts/Bartenders_Bible.apk
+            artifacts/Bartenders_Bible.aab
