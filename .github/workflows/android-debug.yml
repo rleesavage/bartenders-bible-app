@@ -25,66 +25,26 @@ jobs:
           fi
           rm -f test/widget_test.dart
 
-      - name: Set Android identity and permissions
-        working-directory: mobile
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          old = "com.example.bartenders_bible"
-          new = "com.webolium.bartendersbible"
-
-          for p in Path("android").rglob("*"):
-              if p.is_file() and p.suffix in {".kt", ".kts", ".java", ".xml"}:
-                  try:
-                      s = p.read_text()
-                  except UnicodeDecodeError:
-                      continue
-                  if old in s:
-                      p.write_text(s.replace(old, new))
-
-          manifest = Path("android/app/src/main/AndroidManifest.xml")
-          s = manifest.read_text()
-
-          s = s.replace(
-              'android:label="bartenders_bible"',
-              "android:label=\"Bartender's Bible\""
-          )
-
-          if 'android.permission.INTERNET' not in s:
-              s = s.replace(
-                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
-                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n'
-                  '    <uses-permission android:name="android.permission.INTERNET" />'
-              )
-
-          if 'android.permission.RECORD_AUDIO' not in s:
-              s = s.replace(
-                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
-                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n'
-                  '    <uses-permission android:name="android.permission.RECORD_AUDIO" />'
-              )
-
-          if '<queries>' not in s:
-              s = s.replace(
-                  '</manifest>',
-                  '    <queries>\n'
-                  '        <intent>\n'
-                  '            <action android:name="android.speech.RecognitionService" />\n'
-                  '        </intent>\n'
-                  '    </queries>\n'
-                  '</manifest>'
-              )
-
-          manifest.write_text(s)
-          PY
-
       - name: Install persistent debug signing key
         working-directory: mobile
         run: |
           mkdir -p "$HOME/.android"
           cp signing/bartenders-bible-debug.keystore "$HOME/.android/debug.keystore"
           chmod 600 "$HOME/.android/debug.keystore"
+
+      - name: Configure Android and Play upload signing
+        working-directory: mobile
+        env:
+          BB_UPLOAD_KEYSTORE_BASE64: ${{ secrets.BB_UPLOAD_KEYSTORE_BASE64 }}
+          BB_UPLOAD_STORE_PASSWORD: ${{ secrets.BB_UPLOAD_STORE_PASSWORD }}
+          BB_UPLOAD_KEY_PASSWORD: ${{ secrets.BB_UPLOAD_KEY_PASSWORD }}
+          BB_UPLOAD_KEY_ALIAS: ${{ secrets.BB_UPLOAD_KEY_ALIAS }}
+        run: |
+          test -n "$BB_UPLOAD_KEYSTORE_BASE64"
+          test -n "$BB_UPLOAD_STORE_PASSWORD"
+          test -n "$BB_UPLOAD_KEY_PASSWORD"
+          test -n "$BB_UPLOAD_KEY_ALIAS"
+          python3 ../.github/scripts/configure_android.py
 
       - name: Get packages
         working-directory: mobile
@@ -102,9 +62,13 @@ jobs:
         working-directory: mobile
         run: flutter build apk --debug
 
-      - name: Build AAB
+      - name: Build Play AAB
         working-directory: mobile
         run: flutter build appbundle --release
+
+      - name: Verify AAB signature
+        working-directory: mobile
+        run: jarsigner -verify -verbose -certs build/app/outputs/bundle/release/app-release.aab
 
       - name: Name Android outputs
         run: |
