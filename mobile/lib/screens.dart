@@ -187,7 +187,9 @@ class _DrinksScreenState extends State<DrinksScreen> {
                   return ListTile(
                     contentPadding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                    leading: _DrinkThumb(url: drink['hero_url']?.toString()),
+                    leading: _DrinkThumb(
+                      url: (drink['thumb_url'] ?? drink['hero_url'])?.toString(),
+                    ),
                     title: Text(
                       drink['name'].toString(),
                       style: const TextStyle(
@@ -1317,7 +1319,9 @@ class _SearchScreenState extends State<SearchScreen> {
           for (final drink in results)
             Card(
               child: ListTile(
-                leading: _DrinkThumb(url: drink['hero_url']?.toString()),
+                leading: _DrinkThumb(
+                      url: (drink['thumb_url'] ?? drink['hero_url'])?.toString(),
+                    ),
                 title: Text(drink['name'].toString()),
                 subtitle: (drink['short_description'] ?? '')
                         .toString()
