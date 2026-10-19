@@ -12,7 +12,7 @@ class ApiException implements Exception {
 }
 
 class Api {
-  static const base = 'https://webolium.com/bartenders/api/v1';
+  static const base = 'https://www.webolium.com/bartenders/api/v1';
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   String? token;
